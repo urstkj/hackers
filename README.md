@@ -1,0 +1,23 @@
+# HackerOne-PublicReports
+
+This project is aimed to extract urls of publicly disclosed HackerOne reports
+
+The following are the dependency libraries. Use PIP or EASY_INSTALL or BREW to install the below.
+
+	requests
+	json
+	pymongo
+
+
+Make sure "Mongo" running with following values:
+
+	MONGO_HOST = '127.0.0.1'
+	MONGO_PORT = 27017
+	MONGO_USERNAME = ''
+	MONGO_PASSWORD = ''
+
+Running Program: 
+
+	# python hackeronePublicReports.py
+	# python hackeronePublicReportsWithBountyOnly.py
+
