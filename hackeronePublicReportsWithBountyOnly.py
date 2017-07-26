@@ -17,7 +17,7 @@ dictbugs = {}
 
 POOL_SIZE = 20
 Base_url = 'https://hackerone.com'
-Out_file = 'old_reports.csv'
+Out_file = 'PublicReportsWithBounty.csv'
 READ_MODE = 'r'
 WRITE_MODE = 'w'
 APPEND_MODE = 'a'
@@ -59,7 +59,7 @@ def find_public_reports(url):
 						dictbugs[reportid] = report_url
 	except:
 		pass
-		
+
 urls = []
 url = Base_url + '/hacktivity?sort_type=popular&page=1&filter=type%3Aall&range=forever'
 urls.append(url)
@@ -76,22 +76,25 @@ results = pool.map(find_public_reports,urls)
 pool.close() 
 pool.join() 
 
-# Writing public report urls to Output file
-old_reports = []
-with open(Out_file, READ_MODE) as lines:
-	for line in lines:
-		old_reports.append(line)
+if len(dictbugs) > 0:
+	# Writing public report urls to Output file
+	old_reports = []
+	if os.path.exists(Out_file):
+		with open(Out_file, READ_MODE) as lines:
+			for line in lines:
+				old_reports.append(line)
 
-if len(old_reports) == 0:
-	f = open(Out_file, WRITE_MODE)
-else:
-	f = open(Out_file, APPEND_MODE)
+	if len(old_reports) == 0:
+		f = open(Out_file, WRITE_MODE)
+	else:
+		f = open(Out_file, APPEND_MODE)
 
-for key in dictbugs:
-	text = dictbugs[key] + "\n"
-	if text not in old_reports:
-		f.write(text)
-if f:
-	f.close()
+	for key in dictbugs:
+		text = dictbugs[key] + "\n"
+		if text not in old_reports:
+			f.write(text)
+	if f:
+		f.close()
+
 
 

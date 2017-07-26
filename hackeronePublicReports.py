@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, os
 from multiprocessing.dummy import Pool as ThreadPool 
 from pymongo import MongoClient
 
@@ -17,7 +17,7 @@ dictbugs = {}
 
 POOL_SIZE = 20
 Base_url = 'https://hackerone.com'
-Out_file = 'old_reports.csv'
+Out_file = 'PublicReports.csv'
 READ_MODE = 'r'
 WRITE_MODE = 'w'
 APPEND_MODE = 'a'
@@ -31,10 +31,10 @@ headers = {
 
 proxies = {}
 # Uncomment the below to use a proxy or if you are getting TSL / SSL error
-# proxies = {
-# 				'http': 'http://127.0.0.1:8080',
-# 				'https': 'http://127.0.0.1:8080'
-# 			}
+proxies = {
+				'http': 'http://127.0.0.1:8080',
+				'https': 'http://127.0.0.1:8080'
+			}
 
 request = requests.Session()
 
@@ -53,6 +53,9 @@ def find_public_reports(url):
 					# writing public reports to Mongo DB
 					if db.reports.count({'reportid': reportid}) == 0:
 						db.reports.insert({'reportid': reportid, 'title': title, 'report_url': report_url})
+
+					dictbugs[reportid] = report_url
+
 	except Exception as ae:
 		pass
 
@@ -63,7 +66,7 @@ urls.append(url)
 req = request.get(url, proxies=proxies, headers=headers, verify=False)
 pages = int(json.loads(req.text)['pages'])
 
-for x in xrange(2,pages):
+for x in xrange(2,3):
 	url = Base_url + '/hacktivity?sort_type=popular&page='+str(x)+'&filter=type%3Aall&range=forever'
 	urls.append(url)
 
@@ -72,23 +75,25 @@ results = pool.map(find_public_reports,urls)
 pool.close() 
 pool.join() 
 
-# Writing public report urls to Output file
-old_reports = []
-with open(Out_file, READ_MODE) as lines:
-	for line in lines:
-		old_reports.append(line)
+if len(dictbugs) > 0:
+	# Writing public report urls to Output file
+	old_reports = []
+	if os.path.exists(Out_file):
+		with open(Out_file, READ_MODE) as lines:
+			for line in lines:
+				old_reports.append(line)
 
-if len(old_reports) == 0:
-	f = open(Out_file, WRITE_MODE)
-else:
-	f = open(Out_file, APPEND_MODE)
+	if len(old_reports) == 0:
+		f = open(Out_file, WRITE_MODE)
+	else:
+		f = open(Out_file, APPEND_MODE)
 
-for key in dictbugs:
-	text = dictbugs[key] + "\n"
-	if text not in old_reports:
-		f.write(text)
-if f:
-	f.close()
+	for key in dictbugs:
+		text = dictbugs[key] + "\n"
+		if text not in old_reports:
+			f.write(text)
+	if f:
+		f.close()
 
 
 
